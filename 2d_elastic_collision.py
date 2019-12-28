@@ -6,7 +6,17 @@ def randomValue(low, high):
     return (high-low)*random() + low;
 
 dt = 0.01
+arenaSize = 10
 Fnet = vector(0.0, 0.0, 0.0)
+#walls start from rightmost side and go clockwise
+wall1 = curve(pos=[(arenaSize/2, arenaSize/2, 0.0), (arenaSize/2, -arenaSize/2, 0.0)])
+wall2 = curve(pos=[(arenaSize/2, -arenaSize/2, 0.0), (-arenaSize/2, -arenaSize/2, 0.0)])
+wall3 = curve(pos=[(-arenaSize/2, -arenaSize/2, 0.0), (-arenaSize/2, arenaSize/2, 0.0)])
+wall4 = curve(pos=[(-arenaSize/2, arenaSize/2, 0.0), (arenaSize/2, arenaSize/2, 0.0)])
+wall1.p = vector(0.0, 0.0, 0.0)
+wall2.p = vector(0.0, 0.0, 0.0)
+wall3.p = vector(0.0, 0.0, 0.0)
+wall4.p = vector(0.0, 0.0, 0.0)
 hasVal = 0
 ball1 = sphere(pos=(1,0,0), radius = .8) #.2
 ball2 = sphere(pos=(3,1,0), radius = .4) #(3,1,0)
@@ -99,7 +109,7 @@ def checkCollision(ball1, ball2):
     
     if (magr < ball1.radius + ball2.radius and dot(vrel,r) < 0) : #if its less than their radii, collision has happened
         #print('reeeeeeeeeeeeee')
-        pause()
+        #pause()
         vcm = (ball1.p + ball2.p) / (ball1.m + ball2.m);
         rhat = norm(ball1.pos - ball2.pos); #get the direction vector
         ball1.p = ball1.p - 2*ball1.m*rhat*dot((ball1.p/ball1.m) - vcm, rhat);
@@ -167,11 +177,15 @@ while True:
     #print(ball2.v)
     #print(ball1.p)
     #print(ball2.p)
-    print(mag(ball1.p + ball2.p))
+    print(mag(ball1.p + ball2.p + wall1.p + wall2.p + wall3.p + wall4.p))
 
     #check boundaries
     # don't use velocity because we're updating velocity by momentum now
-    # use momentum instead - it won't break co
+    # use momentum instead - at first it seems like this breaks cons. of momentum
+    # but it doesn't because the wall itself gains momentum that the balls lose
+    # so when you total the momentum you have to include the walls momentum
+    # and that total magnitude will be unchanged
+    # p_tot = p_balls + p_walls (initially 0 so you dont consider their momenta at first)
     '''if (ball1.pos.x >= 5):
         ball1.v.x = -ball1.v.x
     if (ball2.pos.x >= 5):
@@ -188,24 +202,38 @@ while True:
         ball1.v.y = ball1.v.y
     if (ball2.pos.y <= -5):
         ball2.v.y = ball2.v.y'''
+
+    # final momentum of ball is just the opposite of its incoming momentum
+    # init is mv, final is -mv
+    # change in momentum of ball is final - init = -mv - mv = -2mv
+    # change in momentum of wall is +2mv
+    # total change in momentum of system is (2mv + -2mv) = 0 by cons. of momentum
+    # etc
     
-    if (ball1.pos.x >= 5):
+    if (ball1.pos.x >= arenaSize/2):
         ball1.p.x += -2*abs(ball1.p.x)
-    if (ball2.pos.x >= 5):
+        wall1.p.x += 2*abs(ball1.p.x)
+    if (ball2.pos.x >= arenaSize/2):
         ball2.p.x += -2*abs(ball2.p.x)
-    if (ball1.pos.x <= -5):
+        wall1.p.x += 2*abs(ball2.p.x)
+    if (ball1.pos.x <= -arenaSize/2):
         ball1.p.x += 2*abs(ball1.p.x)
-    if (ball2.pos.x <= -5):
+        wall3.p.x += -2*abs(ball1.p.x)
+    if (ball2.pos.x <= -arenaSize/2):
         ball2.p.x += 2*abs(ball2.p.x)
-    if (ball1.pos.y >= 5):
+        wall3.p.x += -2*abs(ball2.p.x)
+    if (ball1.pos.y >= arenaSize/2):
         ball1.p.y += -2*abs(ball1.p.y)
-    if (ball2.pos.y >= 5):
+        wall4.p.x += 2*abs(ball1.p.y)
+    if (ball2.pos.y >= arenaSize/2):
         ball2.p.y += -2*abs(ball2.p.y)
-    if (ball1.pos.y <= -5):
+        wall4.p.y += 2*abs(ball2.p.y)
+    if (ball1.pos.y <= -arenaSize/2):
         ball1.p.y += 2*abs(ball1.p.y)
-    if (ball2.pos.y <= -5):
-        hasVal = 1
+        wall2.p.y += -2*abs(ball2.p.y)
+    if (ball2.pos.y <= -arenaSize/2):
         ball2.p.y += 2*abs(ball2.p.y)
+        ball2.p.y += -2*abs(ball2.p.y)
 
     
 
